@@ -1,3 +1,4 @@
+I. Overall
 1. Tại sao chúng ta cần schema?  
 Dù MongoDB là schemaless, tức là không cần phải định nghĩa trước cấu trúc, nhưng việc sử dụng schema vẫn mang lại 1 số lợi ích như: đảm bảo tính nhất quán, dễ dàng validate, tối ưu hóa hiệu năng và index, dễ bảo trì.
 2. Data types?
@@ -39,4 +40,39 @@ Post:
 
 4. Joining with $lookup  
 5. Schema Validation  
+6. Config file
+7. Sự phân tán của MongoDB
+Được thiết kế để phân tán dữ liệu theo chiều ngang ngay từ đầu. Cơ chế chính là Sharding, được tích hợp sẵn, là 1 phần cốt lõi của kiến trúc.  
+Shards trong MongoDB có sự tương đồng vs Partition trong Kafka:
+Mỗi shards đc phân phối trên nhiều máy chủ khác nhau, mỗi shards là 1 replica set, replica chính là primary chịu trách nhiệm ghi, sau đó sao chép vào các máy chủ phụ. Điều này dẫn tới option Write Concern (tương tự như ACKS)
 
+II. CRUD
+1. Create
+Ordered insert: mặc định, MongoDB sẽ thực thi câu lệnh insertMany theo thứ tự (Ordered inserts), thành công tới đâu commit tới đó, nếu có lỗi ở docs nào thì sẽ dừng lại ở docs đó.  
+nếu để option là ordered: 'false', khi có lỗi ở 1 docs, nó vẫn tiếp tục thực hiện các docs khác.  
+Đảm bảo Atomicity khi insertOne và không khi insertMany.  
+
+1.1. Write Concern
+Cho phép bạn quyết định xem khi nào 1 thao tác đc coi là thành công.
+- Unacknowledged (w: 0): ko chờ xác nhận
+- Acknowledged (w: 1) (default): xác nhận từ Priority.
+- Journaled (w: 1, j: true): xác nhận ừ Priority và Journal(nhật ký) đc ghi vào đĩa.
+- Replica Acknowledged (w: "majority"): chờ xác nhận từ phần lớn các node trong replica set.
+
+Write Concern có thể được thiết lập trên DB, Collection hoặc từ mỗi câu lệnh.
+
+2. Read
+2.1. Read Concern
+2.2. Các operators thông dụng
+- @and: mậc định khi dùng cho 1 filter truyền vào là 1 array. Hữu dụng khi phép so sánh lặp lại key, khi ko dùng @and thì key cuối cùng sẽ ghi đè. Dùng @and để kết hợp condition giữa các same keys.
+- $type: kiểm tra kiểu dữ liệu của field
+- $exists: kiểm tra field đó có tồn tại hay không, field = null thì $exist vẫn là true, trong trường hợp này cần check thêm null.
+- $expr: kiểm tra giữa các fields trong cùng 1 document, các field đc đánh dấu bằng $ + tên field.  
+VD: {$expr: {$gt: ["$volumn", "$target"]}}  
+- $cond: trong $cond là các câu điều kiện rẽ nhánh: if then else
+
+3. Update
+4. Delete
+
+Best practice:  
+- dùng insertOne, insertMany, tránh dùng insert => dễ dàng sửa lỗi và bảo trì.
