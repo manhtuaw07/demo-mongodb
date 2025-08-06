@@ -71,8 +71,33 @@ Write Concern có thể được thiết lập trên DB, Collection hoặc từ 
 VD: {$expr: {$gt: ["$volumn", "$target"]}}  
 - $cond: trong $cond là các câu điều kiện rẽ nhánh: if then else
 
+2.3 Array
+VD: user: {
+    hobbies:
+    [
+        {
+            title: "sport"
+            frequency: 1
+        },
+        {
+            title: "sing"
+            frequency: 2
+        }
+    }
+}
+
+- là 1 mảng các doc, chúng ta có thể truy cập tới các field trong doc thông qua Tên array trỏ tới các field đó. VD: hobbies.title
+- tìm kiếm với 1 mảng đầu vào, nếu dùng ":", nó sẽ là order master. Nếu yc cầu không quan tâm thứ tự mà chỉ quan tâm tới giá trị đang tìm kiếm thì dùng $all
+- Lưu ý khi tìm kiếm với $and, với nhiều điều kiện đầu vào, mỗi phần tử match với mỗi điều kiện khác nhau đều thỏa mãn.  VD: Điều kiện: $and: [{title: "sport"}, {frequency: 2}] => matching.  
+Nếu muốn áp dụng điều kiện trên cùng 1 element thì dùng $elemMatch
+
+2.4. Cursor, skip và limit
+Kết quả của find và aggregate là 2 cursor
+
 3. Update
 4. Delete
 
 Best practice:  
 - dùng insertOne, insertMany, tránh dùng insert => dễ dàng sửa lỗi và bảo trì.
+
+III. Indexes
