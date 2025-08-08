@@ -46,6 +46,9 @@ Post:
 Shards trong MongoDB có sự tương đồng vs Partition trong Kafka:
 Mỗi shards đc phân phối trên nhiều máy chủ khác nhau, mỗi shards là 1 replica set, replica chính là primary chịu trách nhiệm ghi, sau đó sao chép vào các máy chủ phụ. Điều này dẫn tới option Write Concern (tương tự như ACKS)
 
+8. Lưu ý:
+
+
 II. CRUD
 1. Create
 Ordered insert: mặc định, MongoDB sẽ thực thi câu lệnh insertMany theo thứ tự (Ordered inserts), thành công tới đâu commit tới đó, nếu có lỗi ở docs nào thì sẽ dừng lại ở docs đó.  
@@ -101,3 +104,26 @@ Best practice:
 - dùng insertOne, insertMany, tránh dùng insert => dễ dàng sửa lỗi và bảo trì.
 
 III. Indexes
+1. Single index
+2. Compound index
+3. Text index:
+- Tìm kiếm 1 từ trong 1 đoạn văn bản bằng regex thực sự không hiệu quả do nó không tận dụng đc single index. Thay vào đó, chúng ta có thể sử dụng text index.  
+- 1 Collection có duy nhất 1 text index. Có thể tạo combined text index để tạo text index cho nhiều trường text.
+- Nếu muốn tìm 1 cụm từ, chú ý bọc chúng với ký tự \". Nếu ko, chúng sẽ đc tách thành nhiều từ và DB sẽ tìm chúng riêng lẻ
+4. Multi-key index: dùng cho array
+
+IV. Aggregation FW
+1. Projection: giai đoạn lấy ra các field cần thiết để show, có thể tạo thêm field hoặc transform nếu cần. Các fields này có thể đc dùng cho các stage sau.
+2. Match: lọc ra các documments tùy vào điều kiện.
+3. Group: merge các bản ghi có cùng _id lại với nhau, thường để tính toán sum, avg,..
+4. Unwind: ngược lại vs Group, Unwind lại làm phẳng các bản ghi này ra thành nhiều bản ghi khác nhau. Mà ở đó, các giá trị trong array sẽ thành các top level fields.
+5. AddField: là 1 stage để thêm hoặc update ducument, tiện hơn prjection khi muốn thêm 1 field mới và giữ nguyên các field còn lại.
+
+Các stage có thể lặp lại nếu cần.
+
+6. Tối Ưu pipelines:
+- Projection nên đc đặt cuối, việc giảm bớt các fields ở các giai đoạn đầu hoặc giữa ko làm cho performance tốt hơn, mà nó sẽ đc MongoDB thực hiện tối ưu tự động.
+- Các filter trong Match sẽ đc tự động phân phối tới các stage hợp lý.
+- Thứ tự các stage cũng sẽ đc DB tự động sắp xếp lại nếu ko hợp lý: VD: sort, limmit => limmit, sort,...
+
+7. Transaction
